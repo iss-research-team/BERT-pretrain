@@ -20,8 +20,7 @@ tokenizer = BertTokenizer.from_pretrained(bert_file)
 model = BertForMaskedLM.from_pretrained(bert_file)
 print('No of parameters: ', model.num_parameters())
 
-dataset = LineByLineTextDataset(tokenizer=tokenizer, file_path='input.txt',
-                                block_size=512)
+dataset = LineByLineTextDataset(tokenizer=tokenizer, file_path='input.txt', block_size=512)
 data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=True, mlm_probability=0.15)
 print('No. of lines: ', len(dataset))
 
