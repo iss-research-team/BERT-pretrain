@@ -37,5 +37,8 @@ trainer = Trainer(
     data_collator=data_collator,
     train_dataset=dataset,
 )
+
+print(tokenizer)
+
 trainer.train()
 trainer.save_model('./outputs/')
