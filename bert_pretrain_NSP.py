@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021/10/27 上午11:21
 # @Author  : liu yuhan
-# @FileName: bert_pretrain_MLM.py
+# @FileName: bert_pretrain_NSP.py
 # @Software: PyCharm
 
 
 import torch
-from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
+from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling, BertForNextSentencePrediction
 from transformers import BertTokenizer, TrainingArguments, Trainer
 from datasets import Dataset
 from tqdm import tqdm
@@ -28,10 +28,11 @@ def load_data(filename):
 
 
 class DataMaker:
-    def __init__(self, tokenizer, label_path, max_len, batch_size, prompt_size):
+    def __init__(self, tokenizer, label_path, max_len, max_label_len, batch_size, prompt_size):
         self.label_path = label_path
         self.tokenizer = tokenizer
         self.max_len = max_len
+        self.max_label_len = max_label_len
         self.batch_size = batch_size
         self.prompt_size = prompt_size
         self.data_collator = DataCollatorForLanguageModeling(tokenizer=self.tokenizer, mlm=True, mlm_probability=0.15)
@@ -65,13 +66,11 @@ class DataMaker:
 
     def data_trans(self, file_path):
         """
-        完成编码，转换成p-tuning的形式
+        完成编码
         :param file_path:
         :return:
         """
 
-        desc_1 = [i for i in range(1, 1 + self.prompt_size)]
-        desc_2 = [i for i in range(self.prompt_size + 1, self.prompt_size * 2 + 1)]
         # 准备类的转码结果
         class_id_list = self.get_label()
         # 载入数据
@@ -81,16 +80,13 @@ class DataMaker:
         for text, label in data:
             # token
             token_ids = tokenizer.encode(text, truncation=True, max_length=self.max_len)
+            token_ids += class_id_list[label]
             # 长度不满的补充到128
-            if len(token_ids) <= self.max_len:
-                token_ids = token_ids + [0] * (self.max_len - len(token_ids))
-            target_ids = self.data_collator([token_ids])['input_ids'][0].tolist()
-
-            token_ids = token_ids[:1] + desc_1 + [103] * 10 + desc_2 + token_ids[1:]
-            target_ids = target_ids[:1] + desc_1 + class_id_list[label] + desc_2 + target_ids[1:]
+            if len(token_ids) <= self.max_len + self.max_label_len:
+                token_ids = token_ids + [0] * (self.max_len + self.max_label_len - len(token_ids))
 
             source_list.append(token_ids)
-            target_list.append(target_ids)
+            target_list.append(1)
 
         return {'input_ids': torch.LongTensor(source_list),
                 'labels': torch.LongTensor(target_list)}
@@ -100,6 +96,7 @@ if __name__ == '__main__':
     # 相关参数
     label_path = 'input/label_MLM.txt'
     max_len = 128
+    max_label_len = 50
     batch_size = 32
     prompt_size = 15
     # model path
@@ -108,12 +105,11 @@ if __name__ == '__main__':
     config = BertConfig.from_pretrained(bert_file)
     tokenizer = BertTokenizer.from_pretrained(bert_file)
 
-    data_maker = DataMaker(tokenizer, label_path, max_len, batch_size, prompt_size)
+    data_maker = DataMaker(tokenizer, label_path, max_len, max_label_len, batch_size, prompt_size)
     data_train = data_maker.data_trans("input/train.txt")
     data_train = Dataset.from_dict(data_train)
-    print(data_train)
 
-    model = BertForMaskedLM.from_pretrained(bert_file)
+    model = BertForNextSentencePrediction.from_pretrained(bert_file)
     print('No of parameters: ', model.num_parameters())
 
     training_args = TrainingArguments(

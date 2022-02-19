@@ -66,7 +66,7 @@ def label_trans(label):
 
 
 def get_label():
-    f = open('input/label.txt', 'r', encoding='UTF-8')
+    f = open('input/label_MLM.txt', 'r', encoding='UTF-8')
     class_id_list = []
     for label in f:
         label = label.split()[1]
