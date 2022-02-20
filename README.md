@@ -7,4 +7,6 @@
 2. P-tuning任务，引入prompt，自动训练模板
 3. NSP任务，以及NSP任务的拓展
 
+模型参见：https://github.com/ymcui/Chinese-BERT-wwm
+
 

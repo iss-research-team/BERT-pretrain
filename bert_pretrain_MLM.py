@@ -10,17 +10,14 @@ import torch
 from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
 from transformers import BertTokenizer, LineByLineTextDataset, TrainingArguments, Trainer
 
-# bert_file = "bert-base-uncased"
-# bert_file = "prajjwal1/bert-tiny"
 bert_file = "ckiplab/albert-base-chinese"
-# bert_file = "clue/albert_chinese_medium"
 
 config = BertConfig.from_pretrained(bert_file)
 tokenizer = BertTokenizer.from_pretrained(bert_file)
 model = BertForMaskedLM.from_pretrained(bert_file)
 print('No of parameters: ', model.num_parameters())
 
-dataset = LineByLineTextDataset(tokenizer=tokenizer, file_path='input.txt', block_size=512)
+dataset = LineByLineTextDataset(tokenizer=tokenizer, file_path="input/train.txt", block_size=512)
 data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=True, mlm_probability=0.15)
 print('No. of lines: ', len(dataset))
 
