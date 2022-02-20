@@ -7,7 +7,7 @@
 
 
 import torch
-from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling, BertForNextSentencePrediction
+from transformers import BertConfig, DataCollatorForLanguageModeling, BertForNextSentencePrediction
 from transformers import BertTokenizer, TrainingArguments, Trainer
 from datasets import Dataset
 from tqdm import tqdm
@@ -117,12 +117,12 @@ if __name__ == '__main__':
         overwrite_output_dir=True,
         num_train_epochs=50,
         per_device_train_batch_size=4,
-        save_steps=100000,
+        save_steps=100000
     )
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=data_train,
+        train_dataset=data_train
     )
     trainer.train()
     trainer.save_model('./outputs/')
