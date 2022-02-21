@@ -7,14 +7,14 @@
 
 
 import torch
-from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
-from transformers import BertTokenizer, LineByLineTextDataset, TrainingArguments, Trainer
+from transformers import RobertaConfig, RobertaForMaskedLM, RobertaTokenizer
+from transformers import DataCollatorForLanguageModeling, LineByLineTextDataset, TrainingArguments, Trainer
 
-bert_file = "ckiplab/albert-base-chinese"
+bert_file = "roberta-base"
 
-config = BertConfig.from_pretrained(bert_file)
-tokenizer = BertTokenizer.from_pretrained(bert_file)
-model = BertForMaskedLM.from_pretrained(bert_file)
+config = RobertaConfig.from_pretrained(bert_file)
+model = RobertaForMaskedLM.from_pretrained(bert_file)
+tokenizer = RobertaTokenizer.from_pretrained(bert_file)
 print('No of parameters: ', model.num_parameters())
 
 dataset = LineByLineTextDataset(tokenizer=tokenizer, file_path="input/train.txt", block_size=512)
@@ -34,8 +34,6 @@ trainer = Trainer(
     data_collator=data_collator,
     train_dataset=dataset,
 )
-
-print(tokenizer)
 
 trainer.train()
 trainer.save_model('./outputs/')
