@@ -114,6 +114,10 @@ if __name__ == '__main__':
     data_train = Dataset.from_dict(data_train)
     data_train.shuffle()
 
+    data_eval = data_maker.data_trans("input/valid.txt")
+    data_eval = Dataset.from_dict(data_eval)
+    data_eval.shuffle()
+
     model = BertForNextSentencePrediction.from_pretrained(bert_file)
     print('No of parameters: ', model.num_parameters())
 
@@ -121,13 +125,14 @@ if __name__ == '__main__':
         output_dir='./outputs/',
         overwrite_output_dir=True,
         num_train_epochs=50,
-        per_device_train_batch_size=4,
-        save_steps=100000
+        per_device_train_batch_size=16,
+        save_steps=10000
     )
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=data_train
+        train_dataset=data_train,
+        eval_dataset=data_eval
     )
     trainer.train()
     trainer.save_model('./outputs/')
