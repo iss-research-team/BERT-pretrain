@@ -7,6 +7,7 @@
 
 
 import torch
+import random
 from transformers import BertConfig, DataCollatorForLanguageModeling, BertForNextSentencePrediction
 from transformers import BertTokenizer, TrainingArguments, Trainer
 from datasets import Dataset
@@ -27,14 +28,19 @@ def load_data(filename):
     return D
 
 
+def get_random_weight(label, num_label):
+    random_weight = [1] * num_label
+    random_weight[label] = 0
+    return random_weight
+
+
 class DataMaker:
-    def __init__(self, tokenizer, label_path, max_len, max_label_len, batch_size, prompt_size):
+    def __init__(self, tokenizer, label_path, max_len, max_label_len, batch_size):
         self.label_path = label_path
         self.tokenizer = tokenizer
         self.max_len = max_len
         self.max_label_len = max_label_len
         self.batch_size = batch_size
-        self.prompt_size = prompt_size
         self.data_collator = DataCollatorForLanguageModeling(tokenizer=self.tokenizer, mlm=True, mlm_probability=0.15)
 
     def label_trans(self, label):
@@ -43,14 +49,7 @@ class DataMaker:
         :param label:
         :return:
         """
-        label_id = self.tokenizer.encode(label)[1:-1]
-        if len(label_id) < 10:
-            add_length = 10 - len(label_id)
-            if add_length % 2 == 0:
-                label_id = [77] * int(add_length / 2) + label_id + [77] * int(add_length / 2)
-            else:
-                label_id = [77] * int((add_length - 1) / 2) + label_id + [77] * int((add_length + 1) / 2)
-        return label_id
+        return self.tokenizer.encode(label)[1:]
 
     def get_label(self):
         """
@@ -73,6 +72,7 @@ class DataMaker:
 
         # 准备类的转码结果
         class_id_list = self.get_label()
+        num_label = len(class_id_list)
         # 载入数据
         data = load_data(file_path)
         source_list, target_list = [], []
@@ -80,13 +80,18 @@ class DataMaker:
         for text, label in data:
             # token
             token_ids = tokenizer.encode(text, truncation=True, max_length=self.max_len)
-            token_ids += class_id_list[label]
-            # 长度不满的补充到128
-            if len(token_ids) <= self.max_len + self.max_label_len:
-                token_ids = token_ids + [0] * (self.max_len + self.max_label_len - len(token_ids))
+            token_ids_pos = token_ids + class_id_list[label]
+            token_ids_neg = token_ids + random.choices(class_id_list, weights=get_random_weight(label, num_label))[0]
+            # 长度不满的补充到max_len+max_label_len
+            if len(token_ids_pos) <= self.max_len + self.max_label_len:
+                token_ids_pos += [0] * (self.max_len + self.max_label_len - len(token_ids_pos))
+            if len(token_ids_neg) <= self.max_len + self.max_label_len:
+                token_ids_neg += [0] * (self.max_len + self.max_label_len - len(token_ids_neg))
 
-            source_list.append(token_ids)
+            source_list.append(token_ids_pos)
             target_list.append(1)
+            source_list.append(token_ids_neg)
+            target_list.append(0)
 
         return {'input_ids': torch.LongTensor(source_list),
                 'labels': torch.LongTensor(target_list)}
@@ -96,18 +101,18 @@ if __name__ == '__main__':
     # 相关参数
     label_path = 'input/label_MLM.txt'
     max_len = 128
-    max_label_len = 50
+    max_label_len = 30
     batch_size = 32
-    prompt_size = 15
     # model path
     bert_file = "chinese_wwm_ext_pytorch"
 
     config = BertConfig.from_pretrained(bert_file)
     tokenizer = BertTokenizer.from_pretrained(bert_file)
 
-    data_maker = DataMaker(tokenizer, label_path, max_len, max_label_len, batch_size, prompt_size)
+    data_maker = DataMaker(tokenizer, label_path, max_len, max_label_len, batch_size)
     data_train = data_maker.data_trans("input/train.txt")
     data_train = Dataset.from_dict(data_train)
+    data_train.shuffle()
 
     model = BertForNextSentencePrediction.from_pretrained(bert_file)
     print('No of parameters: ', model.num_parameters())

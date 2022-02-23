@@ -7,8 +7,8 @@
 
 
 import torch
-from transformers import BertConfig, BertForMaskedLM, DataCollatorForLanguageModeling
-from transformers import BertTokenizer, TrainingArguments, Trainer
+from transformers import AlbertTokenizer, AlbertConfig, AlbertForMaskedLM
+from transformers import DataCollatorForLanguageModeling, TrainingArguments, Trainer
 from datasets import Dataset
 from tqdm import tqdm
 
@@ -103,17 +103,16 @@ if __name__ == '__main__':
     batch_size = 32
     prompt_size = 15
     # model path
-    bert_file = "chinese_wwm_ext_pytorch"
+    bert_file = "albert-base-v2"
 
-    config = BertConfig.from_pretrained(bert_file)
-    tokenizer = BertTokenizer.from_pretrained(bert_file)
+    config = AlbertConfig.from_pretrained(bert_file)
+    tokenizer = AlbertTokenizer.from_pretrained(bert_file)
 
     data_maker = DataMaker(tokenizer, label_path, max_len, batch_size, prompt_size)
     data_train = data_maker.data_trans("input/train.txt")
     data_train = Dataset.from_dict(data_train)
-    print(data_train)
 
-    model = BertForMaskedLM.from_pretrained(bert_file)
+    model = AlbertForMaskedLM.from_pretrained(bert_file)
     print('No of parameters: ', model.num_parameters())
 
     training_args = TrainingArguments(
