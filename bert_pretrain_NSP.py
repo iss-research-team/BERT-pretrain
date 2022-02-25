@@ -125,9 +125,9 @@ if __name__ == '__main__':
         num_train_epochs=50,
         per_device_train_batch_size=16,
         save_steps=10000,
+        do_train=True,
         do_eval=True,
-        eval_steps=500,
-        prediction_loss_only=False
+        prediction_loss_only=False,
     )
     trainer = Trainer(
         model=model,
@@ -135,5 +135,11 @@ if __name__ == '__main__':
         train_dataset=data_train,
         eval_dataset=data_eval
     )
-    trainer.train()
-    trainer.save_model('./outputs/')
+    # Training
+    if training_args.do_train:
+        checkpoint = None
+        train_result = trainer.train()
+        trainer.save_model()  # Saves the tokenizer too for easy upload
+    # Evaluation
+    if training_args.do_eval:
+        metrics = trainer.evaluate()

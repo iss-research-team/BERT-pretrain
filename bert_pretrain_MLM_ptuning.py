@@ -122,9 +122,9 @@ if __name__ == '__main__':
         num_train_epochs=50,
         per_device_train_batch_size=16,
         save_steps=10000,
+        do_train=True,
         do_eval=True,
-        eval_steps=500,
-        prediction_loss_only=False
+        prediction_loss_only=False,
     )
 
     trainer = Trainer(
