@@ -35,12 +35,11 @@ def get_random_weight(label, num_label):
 
 
 class DataMaker:
-    def __init__(self, tokenizer, label_path, max_len, max_label_len, batch_size):
+    def __init__(self, tokenizer, label_path, max_len, max_label_len):
         self.label_path = label_path
         self.tokenizer = tokenizer
         self.max_len = max_len
         self.max_label_len = max_label_len
-        self.batch_size = batch_size
         self.data_collator = DataCollatorForLanguageModeling(tokenizer=self.tokenizer, mlm=True, mlm_probability=0.15)
 
     def label_trans(self, label):
@@ -102,14 +101,13 @@ if __name__ == '__main__':
     label_path = 'input/label_MLM.txt'
     max_len = 128
     max_label_len = 30
-    batch_size = 32
     # model path
     bert_file = "chinese_wwm_ext_pytorch"
 
     config = BertConfig.from_pretrained(bert_file)
     tokenizer = BertTokenizer.from_pretrained(bert_file)
 
-    data_maker = DataMaker(tokenizer, label_path, max_len, max_label_len, batch_size)
+    data_maker = DataMaker(tokenizer, label_path, max_len, max_label_len)
     data_train = data_maker.data_trans("input/train.txt")
     data_train = Dataset.from_dict(data_train)
     data_train.shuffle()
@@ -126,7 +124,10 @@ if __name__ == '__main__':
         overwrite_output_dir=True,
         num_train_epochs=50,
         per_device_train_batch_size=16,
-        save_steps=10000
+        save_steps=10000,
+        do_eval=True,
+        eval_steps=500,
+        prediction_loss_only=False
     )
     trainer = Trainer(
         model=model,

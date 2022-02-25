@@ -28,11 +28,10 @@ def load_data(filename):
 
 
 class DataMaker:
-    def __init__(self, tokenizer, label_path, max_len, batch_size, prompt_size):
+    def __init__(self, tokenizer, label_path, max_len, prompt_size):
         self.label_path = label_path
         self.tokenizer = tokenizer
         self.max_len = max_len
-        self.batch_size = batch_size
         self.prompt_size = prompt_size
         self.data_collator = DataCollatorForLanguageModeling(tokenizer=self.tokenizer, mlm=True, mlm_probability=0.15)
 
@@ -100,7 +99,6 @@ if __name__ == '__main__':
     # 相关参数
     label_path = 'input/label_MLM.txt'
     max_len = 128
-    batch_size = 32
     prompt_size = 15
     # model path
     bert_file = "albert-base-v2"
@@ -108,9 +106,12 @@ if __name__ == '__main__':
     config = AlbertConfig.from_pretrained(bert_file)
     tokenizer = AlbertTokenizer.from_pretrained(bert_file)
 
-    data_maker = DataMaker(tokenizer, label_path, max_len, batch_size, prompt_size)
+    data_maker = DataMaker(tokenizer, label_path, max_len, prompt_size)
     data_train = data_maker.data_trans("input/train.txt")
     data_train = Dataset.from_dict(data_train)
+
+    data_eval = data_maker.data_trans("input/valid.txt")
+    data_eval = Dataset.from_dict(data_eval)
 
     model = AlbertForMaskedLM.from_pretrained(bert_file)
     print('No of parameters: ', model.num_parameters())
@@ -119,13 +120,18 @@ if __name__ == '__main__':
         output_dir='./outputs/',
         overwrite_output_dir=True,
         num_train_epochs=50,
-        per_device_train_batch_size=4,
-        save_steps=100000,
+        per_device_train_batch_size=16,
+        save_steps=10000,
+        do_eval=True,
+        eval_steps=500,
+        prediction_loss_only=False
     )
+
     trainer = Trainer(
         model=model,
         args=training_args,
         train_dataset=data_train,
+        eval_dataset=data_eval
     )
     trainer.train()
     trainer.save_model('./outputs/')
