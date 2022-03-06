@@ -17,12 +17,12 @@ model = AlbertForMaskedLM.from_pretrained(bert_file)
 tokenizer = AlbertTokenizer.from_pretrained(bert_file)
 print('No of parameters: ', model.num_parameters())
 
-dataset = LineByLineTextDataset(tokenizer=tokenizer, file_path="input/train.txt", block_size=512)
+dataset = LineByLineTextDataset(tokenizer=tokenizer, file_path="../data/input/train.txt", block_size=512)
 data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=True, mlm_probability=0.15)
 print('No. of lines: ', len(dataset))
 
 training_args = TrainingArguments(
-    output_dir='./outputs/',
+    output_dir='../data/outputs/',
     overwrite_output_dir=True,
     num_train_epochs=50,
     per_device_train_batch_size=4,

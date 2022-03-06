@@ -97,14 +97,14 @@ class DataMaker:
 
 if __name__ == '__main__':
     # 相关参数
-    label_path = 'input/label_MLM.txt'
+    label_path = '../data/input/label_MLM.txt'
     max_len = 128
     prompt_size = 15
     # model path
     bert_file = "albert-base-v2"
 
     config = AlbertConfig.from_pretrained(bert_file)
-    tokenizer = AlbertTokenizer.from_pretrained(bert_file)
+    tokenizer = AlbertTokenizer.from_pretrained(bert_file, config)
 
     data_maker = DataMaker(tokenizer, label_path, max_len, prompt_size)
     data_train = data_maker.data_trans("input/train.txt")
@@ -113,11 +113,11 @@ if __name__ == '__main__':
     data_eval = data_maker.data_trans("input/valid.txt")
     data_eval = Dataset.from_dict(data_eval)
 
-    model = AlbertForMaskedLM.from_pretrained(bert_file)
+    model = AlbertForMaskedLM.from_pretrained(bert_file, config)
     print('No of parameters: ', model.num_parameters())
 
     training_args = TrainingArguments(
-        output_dir='./outputs/',
+        output_dir='../data/outputs/',
         overwrite_output_dir=True,
         num_train_epochs=50,
         per_device_train_batch_size=16,

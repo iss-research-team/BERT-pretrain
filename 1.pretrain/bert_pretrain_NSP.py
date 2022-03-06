@@ -8,8 +8,8 @@
 
 import torch
 import random
-from transformers import BertConfig, DataCollatorForLanguageModeling, BertForNextSentencePrediction
-from transformers import BertTokenizer, TrainingArguments, Trainer
+from transformers import BertConfig, BertTokenizer, BertForNextSentencePrediction
+from transformers import TrainingArguments, Trainer, DataCollatorForLanguageModeling
 from datasets import Dataset
 from tqdm import tqdm
 
@@ -98,11 +98,11 @@ class DataMaker:
 
 if __name__ == '__main__':
     # 相关参数
-    label_path = 'input/label_MLM.txt'
+    label_path = '../data/input/label_MLM.txt'
     max_len = 128
     max_label_len = 30
     # model path
-    bert_file = "chinese_wwm_ext_pytorch"
+    bert_file = "../bert-model/chinese_wwm_ext_pytorch"
 
     config = BertConfig.from_pretrained(bert_file)
     tokenizer = BertTokenizer.from_pretrained(bert_file)
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     print('No of parameters: ', model.num_parameters())
 
     training_args = TrainingArguments(
-        output_dir='./outputs/',
+        output_dir='../data/outputs/',
         overwrite_output_dir=True,
         num_train_epochs=50,
         per_device_train_batch_size=16,
