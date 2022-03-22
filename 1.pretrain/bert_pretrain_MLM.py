@@ -5,13 +5,13 @@
 # @FileName: bert_pretrain_MLM.py
 # @Software: PyCharm
 
-
+import sys
 import torch
 from transformers import AutoModelForMaskedLM, AutoTokenizer
 from transformers import DataCollatorForLanguageModeling, LineByLineTextDataset, TrainingArguments, Trainer
 
 bert_file = "roberta-base"
-label = 'patent'
+label = sys.argv[1]
 
 model = AutoModelForMaskedLM.from_pretrained(bert_file)
 tokenizer = AutoTokenizer.from_pretrained(bert_file)
