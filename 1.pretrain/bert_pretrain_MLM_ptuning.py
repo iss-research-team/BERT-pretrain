@@ -83,13 +83,13 @@ class DataMaker:
             # 长度不满的补充到128
             if len(token_ids) <= self.max_len:
                 token_ids = token_ids + [0] * (self.max_len - len(token_ids))
-            target_ids = self.data_collator([token_ids])['input_ids'][0].tolist()
+            token_ids_masked = self.data_collator([token_ids])['input_ids'][0].tolist()
 
-            token_ids = token_ids[:1] + desc_1 + [103] * 10 + desc_2 + token_ids[1:]
-            target_ids = target_ids[:1] + desc_1 + class_id_list[label] + desc_2 + target_ids[1:]
+            source_ids = token_ids_masked[:1] + desc_1 + [103] * 10 + desc_2 + token_ids_masked[1:]
+            label_ids = token_ids[:1] + desc_1 + class_id_list[label] + desc_2 + token_ids[1:]
 
-            source_list.append(token_ids)
-            target_list.append(target_ids)
+            source_list.append(source_ids)
+            target_list.append(label_ids)
 
         return {'input_ids': torch.LongTensor(source_list),
                 'labels': torch.LongTensor(target_list)}
